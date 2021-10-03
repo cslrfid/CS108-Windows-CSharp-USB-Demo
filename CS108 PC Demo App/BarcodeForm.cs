@@ -324,8 +324,9 @@ namespace CS108_PC_Client
         private void btn_cont_Click(object sender, EventArgs e)
         {
             byte[] data = new byte[] { 0x1b, 0x33 };
-            /*byte[] data = new byte[] { (byte)'n', (byte)'l', (byte)'s', (byte)'0', (byte)'0', (byte)'0', (byte)'6', (byte)'0', (byte)'1', (byte)'0', (byte)';' };
-                                       //0x1b, 0x31, (byte)';'};*/
+            //byte[] data = new byte[] { (byte)'n', (byte)'l', (byte)'s', (byte)'0', (byte)'0', (byte)'0', (byte)'6', (byte)'0', (byte)'1', (byte)'0', (byte)';' };
+            //byte[] data = new byte[] { (byte)'n', (byte)'l', (byte)'s', (byte)'0', (byte)'3', (byte)'0', (byte)'2', (byte)'0', (byte)'2', (byte)'0', (byte)';' };
+            //byte[] data = new byte[] { (byte)'n', (byte)'l', (byte)'s', (byte)'0', (byte)'0', (byte)'0', (byte)'6', (byte)'0', (byte)'0', (byte)'0', (byte)';' };
             byte[] command = BarcodeCommands.SendCommand(data);
 
             if (!TransmitData(command, command.Length))

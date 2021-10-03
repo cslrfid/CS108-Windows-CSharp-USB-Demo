@@ -284,7 +284,11 @@ namespace CS108_PC_Client
                         datalen = pkt_len * 4;
                         m_rfid_buffer_size -= 8;
                         m_rfid_buffer_tail += 8;
-                        if (pkt_ver == 0x40)
+                        if (pkt_ver == 0x04)
+                        {
+                            datalen = pkt_len;
+                        }
+                        else if (pkt_ver == 0x40)
                         {
                             switch (flags)
                             {
@@ -397,23 +401,61 @@ namespace CS108_PC_Client
                         byte[] data = new byte[datalen];
                         byte[] PC = new byte[2];
                         byte[] EPC = new byte[128];
+                        float rssi;
+                        int epclen;
                         for (int cnt = 0; cnt < datalen; cnt++)
                         {
                             data[cnt] = m_rfid_buffer[index++];
                         }
-                        for (int cnt = 0; cnt < 2; cnt++)
+                        if (pkt_ver == 0x04)
                         {
-                            PC[cnt] = data[12 + cnt];
+                            int cnt = 0;
+                            while (cnt < datalen)
+                            {
+                                PC[0] = data[cnt++];
+                                PC[1] = data[cnt++];
+                                epclen = ((PC[0] >> 3) & 0x1f) * 2;
+                                for (int i = 0; i < epclen; i++)
+                                {
+                                    EPC[i] = data[cnt++];
+                                }
+                                rssi = ConvertNBRSSI(data[cnt++]);
+                                UpdateListView(ByteArrayToHexString(PC, 2), ByteArrayToHexString(EPC, epclen), rssi);
+                                m_totaltag++;
+                            }
                         }
-                        for (int cnt = 0; cnt < (datalen - 16); cnt++)
+                        else
                         {
-                            EPC[cnt] = data[14 + cnt];
+                            epclen = datalen - 16;
+                            for (int cnt = 0; cnt < 2; cnt++)
+                            {
+                                PC[cnt] = data[12 + cnt];
+                            }
+                            for (int cnt = 0; cnt < epclen; cnt++)
+                            {
+                                EPC[cnt] = data[14 + cnt];
+                            }
+                            rssi = ConvertNBRSSI(data[5]);
+                            UpdateListView(ByteArrayToHexString(PC, 2), ByteArrayToHexString(EPC, epclen), rssi);
+                            m_totaltag++;
                         }
+                        continue;
+                    }
+                    if (pkt_type == 0x1008)
+                    {
+                        byte[] data = new byte[datalen];
+                        for (int cnt = 0; cnt < datalen; cnt++)
+                        {
+                            data[cnt] = m_rfid_buffer[index++];
+                        }
+                        uint Querys = (uint)(data[0]) + ((uint)(data[1]) << 8) + ((uint)(data[2]) << 16) + ((uint)(data[3]) << 24);
+                        uint RN16_RX = (uint)(data[4]) + ((uint)(data[5]) << 8) + ((uint)(data[6]) << 16) + ((uint)(data[7]) << 24);
+                        uint RN16_TO = (uint)(data[8]) + ((uint)(data[9]) << 8) + ((uint)(data[10]) << 16) + ((uint)(data[11]) << 24);
+                        uint EPC_TO = (uint)(data[12]) + ((uint)(data[13]) << 8) + ((uint)(data[14]) << 16) + ((uint)(data[15]) << 24);
+                        uint EPC_RX = (uint)(data[16]) + ((uint)(data[17]) << 8) + ((uint)(data[18]) << 16) + ((uint)(data[19]) << 24);
+                        uint CRC = (uint)(data[20]) + ((uint)(data[21]) << 8) + ((uint)(data[22]) << 16) + ((uint)(data[23]) << 24);
 
-                        float rssi = ConvertNBRSSI(data[5]);
-
-                        UpdateListView(ByteArrayToHexString(PC, 2), ByteArrayToHexString(EPC, datalen - 16), rssi);
-                        m_totaltag++;
+                        UpdateInfo(String.Format("Inventory Cycle End Diag Packet. EPC_RX: {0:X4}", EPC_RX));
                         continue;
                     }
                 }
@@ -454,6 +496,7 @@ namespace CS108_PC_Client
         private void btn_rfid_clear_Click(object sender, EventArgs e)
         {
             lv_tag.Items.Clear();
+            UpdateTotal(0);
         }
 
         private void btn_clear_info_Click(object sender, EventArgs e)
@@ -490,9 +533,14 @@ namespace CS108_PC_Client
             Thread.Sleep(10);
 
             //INV_CFG Command for dynamic Q
-            //RFIDCommands.SendData(m_hid, HexStringToByteArray("7001010901004001"), 8);
-            RFIDCommands.SendData(m_hid, HexStringToByteArray("7001010901000000"), 8);
+            int delay = Convert.ToInt32(tb_delay.Text);
+            RFIDCommands.SendData(m_hid, HexStringToByteArray(String.Format("700101090100{0:X2}{1:X2}", (delay & 0xF) << 4, (delay >> 4) & 0x3)), 8);
+            //RFIDCommands.SendData(m_hid, HexStringToByteArray("7001010901000004"), 8);
+            //RFIDCommands.SendData(m_hid, HexStringToByteArray("7001010901000000"), 8);
             Thread.Sleep(10);
+
+            /*RFIDCommands.SendData(m_hid, HexStringToByteArray("7001010215020000"), 8);
+            Thread.Sleep(10);*/
 
             //Start inventory
             RFIDCommands.SendData(m_hid, HexStringToByteArray("700100f00f000000"), 8);
@@ -599,6 +647,7 @@ namespace CS108_PC_Client
                 string[] row = { lv_tag.Items.Count.ToString(), PC, EPC, rssi.ToString(), "1" };
                 ListViewItem listViewItem = new ListViewItem(row);
                 lv_tag.Items.Add(listViewItem);
+                UpdateTotal(count + 1);
             }
         }
 
@@ -611,6 +660,17 @@ namespace CS108_PC_Client
                 return;
             }
             lb_rate.Text = rate.ToString();
+        }
+
+        private delegate void UpdateTotalDeleg(int total);
+        private void UpdateTotal(int total)
+        {
+            if (this.InvokeRequired)
+            {
+                Invoke(new UpdateTotalDeleg(UpdateTotal), new object[] { total });
+                return;
+            }
+            lb_total.Text = total.ToString();
         }
 
         private void btn_set_Click(object sender, EventArgs e)

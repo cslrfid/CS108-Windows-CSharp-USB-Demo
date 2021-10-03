@@ -30,10 +30,11 @@
         {
             this.components = new System.ComponentModel.Container();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.lb_total = new System.Windows.Forms.Label();
+            this.label13 = new System.Windows.Forms.Label();
             this.lb_rate = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.label11 = new System.Windows.Forms.Label();
-            this.label2 = new System.Windows.Forms.Label();
             this.lv_tag = new CS108_PC_Client.TListView();
             this.col_index = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.col_pc = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -48,6 +49,12 @@
             this.tb_info = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.label2 = new System.Windows.Forms.Label();
+            this.tb_delay = new System.Windows.Forms.TextBox();
+            this.label14 = new System.Windows.Forms.Label();
+            this.label10 = new System.Windows.Forms.Label();
+            this.tb_tx_on = new System.Windows.Forms.TextBox();
+            this.label12 = new System.Windows.Forms.Label();
             this.tb_version = new System.Windows.Forms.TextBox();
             this.btn_version = new System.Windows.Forms.Button();
             this.label9 = new System.Windows.Forms.Label();
@@ -62,19 +69,17 @@
             this.label4 = new System.Windows.Forms.Label();
             this.btn_clear_info = new System.Windows.Forms.Button();
             this.timer_rate = new System.Windows.Forms.Timer(this.components);
-            this.label10 = new System.Windows.Forms.Label();
-            this.tb_tx_on = new System.Windows.Forms.TextBox();
-            this.label12 = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.SuspendLayout();
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.lb_total);
+            this.groupBox1.Controls.Add(this.label13);
             this.groupBox1.Controls.Add(this.lb_rate);
             this.groupBox1.Controls.Add(this.label3);
             this.groupBox1.Controls.Add(this.label11);
-            this.groupBox1.Controls.Add(this.label2);
             this.groupBox1.Controls.Add(this.lv_tag);
             this.groupBox1.Controls.Add(this.btn_stop_inventory);
             this.groupBox1.Controls.Add(this.btn_inventory);
@@ -88,10 +93,28 @@
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "RFID";
             // 
+            // lb_total
+            // 
+            this.lb_total.AutoSize = true;
+            this.lb_total.Location = new System.Drawing.Point(594, 300);
+            this.lb_total.Name = "lb_total";
+            this.lb_total.Size = new System.Drawing.Size(11, 12);
+            this.lb_total.TabIndex = 23;
+            this.lb_total.Text = "0";
+            // 
+            // label13
+            // 
+            this.label13.AutoSize = true;
+            this.label13.Location = new System.Drawing.Point(563, 300);
+            this.label13.Name = "label13";
+            this.label13.Size = new System.Drawing.Size(35, 12);
+            this.label13.TabIndex = 22;
+            this.label13.Text = "Total: ";
+            // 
             // lb_rate
             // 
             this.lb_rate.AutoSize = true;
-            this.lb_rate.Location = new System.Drawing.Point(644, 300);
+            this.lb_rate.Location = new System.Drawing.Point(693, 300);
             this.lb_rate.Name = "lb_rate";
             this.lb_rate.Size = new System.Drawing.Size(11, 12);
             this.lb_rate.TabIndex = 21;
@@ -100,7 +123,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(668, 300);
+            this.label3.Location = new System.Drawing.Point(717, 300);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(30, 12);
             this.label3.TabIndex = 20;
@@ -109,20 +132,11 @@
             // label11
             // 
             this.label11.AutoSize = true;
-            this.label11.Location = new System.Drawing.Point(614, 300);
+            this.label11.Location = new System.Drawing.Point(663, 300);
             this.label11.Name = "label11";
             this.label11.Size = new System.Drawing.Size(32, 12);
             this.label11.TabIndex = 19;
             this.label11.Text = "Rate: ";
-            // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(3, 18);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(33, 12);
-            this.label2.TabIndex = 18;
-            this.label2.Text = "label2";
             // 
             // lv_tag
             // 
@@ -236,6 +250,9 @@
             // 
             // groupBox2
             // 
+            this.groupBox2.Controls.Add(this.label2);
+            this.groupBox2.Controls.Add(this.tb_delay);
+            this.groupBox2.Controls.Add(this.label14);
             this.groupBox2.Controls.Add(this.label10);
             this.groupBox2.Controls.Add(this.tb_tx_on);
             this.groupBox2.Controls.Add(this.label12);
@@ -258,9 +275,63 @@
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Settings";
             // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(511, 18);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(18, 12);
+            this.label2.TabIndex = 32;
+            this.label2.Text = "ms";
+            // 
+            // tb_delay
+            // 
+            this.tb_delay.Location = new System.Drawing.Point(466, 15);
+            this.tb_delay.MaxLength = 3;
+            this.tb_delay.Name = "tb_delay";
+            this.tb_delay.Size = new System.Drawing.Size(39, 22);
+            this.tb_delay.TabIndex = 31;
+            this.tb_delay.Text = "0";
+            // 
+            // label14
+            // 
+            this.label14.AutoSize = true;
+            this.label14.Location = new System.Drawing.Point(406, 18);
+            this.label14.Name = "label14";
+            this.label14.Size = new System.Drawing.Size(54, 12);
+            this.label14.TabIndex = 30;
+            this.label14.Text = "Tag delay:";
+            // 
+            // label10
+            // 
+            this.label10.AutoSize = true;
+            this.label10.Location = new System.Drawing.Point(373, 18);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(18, 12);
+            this.label10.TabIndex = 29;
+            this.label10.Text = "ms";
+            // 
+            // tb_tx_on
+            // 
+            this.tb_tx_on.Location = new System.Drawing.Point(328, 15);
+            this.tb_tx_on.MaxLength = 4;
+            this.tb_tx_on.Name = "tb_tx_on";
+            this.tb_tx_on.Size = new System.Drawing.Size(39, 22);
+            this.tb_tx_on.TabIndex = 28;
+            this.tb_tx_on.Text = "400";
+            // 
+            // label12
+            // 
+            this.label12.AutoSize = true;
+            this.label12.Location = new System.Drawing.Point(275, 18);
+            this.label12.Name = "label12";
+            this.label12.Size = new System.Drawing.Size(40, 12);
+            this.label12.TabIndex = 27;
+            this.label12.Text = "TX On:";
+            // 
             // tb_version
             // 
-            this.tb_version.Location = new System.Drawing.Point(611, 71);
+            this.tb_version.Location = new System.Drawing.Point(701, 71);
             this.tb_version.MaxLength = 100;
             this.tb_version.Name = "tb_version";
             this.tb_version.ReadOnly = true;
@@ -269,7 +340,7 @@
             // 
             // btn_version
             // 
-            this.btn_version.Location = new System.Drawing.Point(500, 67);
+            this.btn_version.Location = new System.Drawing.Point(590, 67);
             this.btn_version.Name = "btn_version";
             this.btn_version.Size = new System.Drawing.Size(105, 27);
             this.btn_version.TabIndex = 25;
@@ -384,33 +455,6 @@
             this.timer_rate.Interval = 1000;
             this.timer_rate.Tick += new System.EventHandler(this.readrate_Tick);
             // 
-            // label10
-            // 
-            this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(373, 18);
-            this.label10.Name = "label10";
-            this.label10.Size = new System.Drawing.Size(18, 12);
-            this.label10.TabIndex = 29;
-            this.label10.Text = "ms";
-            // 
-            // tb_tx_on
-            // 
-            this.tb_tx_on.Location = new System.Drawing.Point(328, 15);
-            this.tb_tx_on.MaxLength = 3;
-            this.tb_tx_on.Name = "tb_tx_on";
-            this.tb_tx_on.Size = new System.Drawing.Size(39, 22);
-            this.tb_tx_on.TabIndex = 28;
-            this.tb_tx_on.Text = "400";
-            // 
-            // label12
-            // 
-            this.label12.AutoSize = true;
-            this.label12.Location = new System.Drawing.Point(275, 18);
-            this.label12.Name = "label12";
-            this.label12.Size = new System.Drawing.Size(40, 12);
-            this.label12.TabIndex = 27;
-            this.label12.Text = "TX On:";
-            // 
             // RFIDForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -468,10 +512,14 @@
         private System.Windows.Forms.Label lb_rate;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label label11;
-        private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label10;
         private System.Windows.Forms.TextBox tb_tx_on;
         private System.Windows.Forms.Label label12;
+        private System.Windows.Forms.Label lb_total;
+        private System.Windows.Forms.Label label13;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.TextBox tb_delay;
+        private System.Windows.Forms.Label label14;
     }
 }
 

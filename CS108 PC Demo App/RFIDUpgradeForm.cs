@@ -493,7 +493,7 @@ namespace CS108_PC_Client
                 MessageBox.Show("Device failed to transmit data.");
             }
 
-            Thread.Sleep(100);
+            Thread.Sleep(500);
             RFIDCommands.GetVersion(m_hid);
         }
 

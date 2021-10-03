@@ -31,6 +31,7 @@
             this.components = new System.ComponentModel.Container();
             this.barcode_timer_read = new System.Windows.Forms.Timer(this.components);
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.btn_cont = new System.Windows.Forms.Button();
             this.btn_trigger = new System.Windows.Forms.Button();
             this.btn_barcode_clear = new System.Windows.Forms.Button();
             this.btn_barcode_poweroff = new System.Windows.Forms.Button();
@@ -39,7 +40,6 @@
             this.btn_barcode_poweron = new System.Windows.Forms.Button();
             this.tb_status = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
-            this.btn_cont = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -63,6 +63,16 @@
             this.groupBox1.TabIndex = 4;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Barcode";
+            // 
+            // btn_cont
+            // 
+            this.btn_cont.Location = new System.Drawing.Point(8, 175);
+            this.btn_cont.Name = "btn_cont";
+            this.btn_cont.Size = new System.Drawing.Size(105, 27);
+            this.btn_cont.TabIndex = 13;
+            this.btn_cont.Text = "Continuous Mode";
+            this.btn_cont.UseVisualStyleBackColor = true;
+            this.btn_cont.Click += new System.EventHandler(this.btn_cont_Click);
             // 
             // btn_trigger
             // 
@@ -138,16 +148,6 @@
             this.label1.Size = new System.Drawing.Size(35, 12);
             this.label1.TabIndex = 6;
             this.label1.Text = "Status:";
-            // 
-            // btn_cont
-            // 
-            this.btn_cont.Location = new System.Drawing.Point(8, 175);
-            this.btn_cont.Name = "btn_cont";
-            this.btn_cont.Size = new System.Drawing.Size(105, 27);
-            this.btn_cont.TabIndex = 13;
-            this.btn_cont.Text = "Continuous Mode";
-            this.btn_cont.UseVisualStyleBackColor = true;
-            this.btn_cont.Click += new System.EventHandler(this.btn_cont_Click);
             // 
             // BarcodeForm
             // 
