@@ -228,6 +228,13 @@ namespace CS108_PC_Client
                         {
                             tb_status.Text = "Command success.";
                         }
+                        else if (buffer[0] == 0x02) // new prefix
+                        {
+                            string ascii = System.Text.Encoding.UTF8.GetString(buffer, 10, (int)(payload_len - 19));
+
+                            tb_barcode_receive.AppendText(ascii);
+                            tb_barcode_receive.AppendText("\r\n");
+                        }
                         else
                         {
                             string ascii = System.Text.Encoding.UTF8.GetString(buffer);
@@ -328,6 +335,26 @@ namespace CS108_PC_Client
             //byte[] data = new byte[] { (byte)'n', (byte)'l', (byte)'s', (byte)'0', (byte)'3', (byte)'0', (byte)'2', (byte)'0', (byte)'2', (byte)'0', (byte)';' };
             //byte[] data = new byte[] { (byte)'n', (byte)'l', (byte)'s', (byte)'0', (byte)'0', (byte)'0', (byte)'6', (byte)'0', (byte)'0', (byte)'0', (byte)';' };
             byte[] command = BarcodeCommands.SendCommand(data);
+
+            if (!TransmitData(command, command.Length))
+            {
+                MessageBox.Show("Device failed to transmit data.");
+            }
+        }
+
+        private void btn_vibrator_on_Click(object sender, EventArgs e)
+        {
+            byte[] command = BarcodeCommands.VibratorOn(1, 1000);
+
+            if (!TransmitData(command, command.Length))
+            {
+                MessageBox.Show("Device failed to transmit data.");
+            }
+        }
+
+        private void btn_vibrator_off_Click(object sender, EventArgs e)
+        {
+            byte[] command = BarcodeCommands.VibratorOff();
 
             if (!TransmitData(command, command.Length))
             {

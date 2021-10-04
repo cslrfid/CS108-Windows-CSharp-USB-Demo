@@ -31,6 +31,7 @@ namespace CS108_PC_Client
 
         int m_totaltag = 0;
         int m_tagRate = 0;
+        int m_elapsed = 0;
 
         readonly object locker = new object();
 
@@ -51,6 +52,10 @@ namespace CS108_PC_Client
             m_stopRfidDecode = false;
             Thread thread2 = new Thread(new ThreadStart(DecodeRfidCommands));
             thread2.Start();
+
+            comboBox_session.SelectedIndex = 0;
+            comboBox_target.SelectedIndex = 0;
+            comboBox_algorithm.SelectedIndex = 1;
         }
 
         private void Main_FormClosing(object sender, FormClosingEventArgs e)
@@ -297,7 +302,7 @@ namespace CS108_PC_Client
                                     break;
                                 case 0x03:
                                     UpdateInfo("Abort command response received.");
-                                    m_startInventory = false;
+                                    //m_startInventory = false;
                                     break;
                                 default:
                                     UpdateInfo("other control command response received.");
@@ -533,11 +538,13 @@ namespace CS108_PC_Client
             Thread.Sleep(10);
 
             //INV_CFG Command for dynamic Q
-            int delay = Convert.ToInt32(tb_delay.Text);
-            RFIDCommands.SendData(m_hid, HexStringToByteArray(String.Format("700101090100{0:X2}{1:X2}", (delay & 0xF) << 4, (delay >> 4) & 0x3)), 8);
-            //RFIDCommands.SendData(m_hid, HexStringToByteArray("7001010901000004"), 8);
+            /*int delay = Convert.ToInt32(tb_delay.Text);
+            if (cb_compact.Checked)
+                RFIDCommands.SendData(m_hid, HexStringToByteArray("7001010901000004"), 8);
+            else
+                RFIDCommands.SendData(m_hid, HexStringToByteArray(String.Format("700101090100{0:X2}{1:X2}", (delay & 0xF) << 4, (delay >> 4) & 0x3)), 8);*/
             //RFIDCommands.SendData(m_hid, HexStringToByteArray("7001010901000000"), 8);
-            Thread.Sleep(10);
+            //Thread.Sleep(10);
 
             /*RFIDCommands.SendData(m_hid, HexStringToByteArray("7001010215020000"), 8);
             Thread.Sleep(10);*/
@@ -547,6 +554,7 @@ namespace CS108_PC_Client
 
             m_startInventory = true;
             m_totaltag = 0;
+            m_elapsed = 0;
         }
 
         private void StopInventory()
@@ -660,6 +668,7 @@ namespace CS108_PC_Client
                 return;
             }
             lb_rate.Text = rate.ToString();
+            lb_elapsed.Text = m_elapsed.ToString();
         }
 
         private delegate void UpdateTotalDeleg(int total);
@@ -707,7 +716,54 @@ namespace CS108_PC_Client
             //HST Command
             RFIDCommands.SendData(m_hid, HexStringToByteArray("700100f019000000"), 8);
             Thread.Sleep(10);
+        }
 
+        private void btn_invset_Click(object sender, EventArgs e)
+        {
+            uint buf;
+            uint session, target, toggle, algorithm, startq, minq, maxq, tmult, retry, compact;
+
+            session = (uint)comboBox_session.SelectedIndex;
+            toggle = (uint)(comboBox_target.SelectedIndex == 0 ? 1 : 0); 
+            target = (uint)(comboBox_target.SelectedIndex == 2 ? 1 : 0);
+            algorithm = (uint)(comboBox_algorithm.SelectedIndex == 1 ? 3 : 0);
+            compact = (uint)(cb_compact.Checked ? 1 : 0);
+            startq = Convert.ToUInt32(tb_startq.Text);
+            minq = Convert.ToUInt32(tb_minq.Text);
+            maxq = Convert.ToUInt32(tb_maxq.Text);
+            tmult = Convert.ToUInt32(tb_threshold.Text);
+            retry = Convert.ToUInt32(tb_retry.Text);
+            
+            buf = (target << 4 & 0x10) | (session << 5 & 0x60);
+            RFIDCommands.SendData(m_hid, HexStringToByteArray(String.Format("70010009{0:X2}{1:X2}{2:X2}{3:X2}", (uint)(buf & 0xff), (uint)(buf >> 8 & 0xff), (uint)(buf >> 16 & 0xff), (uint)(buf >> 24 & 0xff))), 8);
+            Thread.Sleep(1);
+
+            uint delay = Convert.ToUInt32(tb_delay.Text);
+            uint cycle_delay = Convert.ToUInt32(tb_cycledelay.Text);
+            buf = (algorithm & 0x1F) | ((delay & 0x3F) << 20) | (compact << 26);
+            RFIDCommands.SendData(m_hid, HexStringToByteArray(String.Format("70010109{0:X2}{1:X2}{2:X2}{3:X2}", (uint)(buf & 0xff), (uint)(buf >> 8 & 0xff), (uint)(buf >> 16 & 0xff), (uint)(buf >> 24 & 0xff))), 8);
+            Thread.Sleep(1);
+
+            RFIDCommands.SendData(m_hid, HexStringToByteArray(String.Format("70010209{0:X2}000000", algorithm)), 8);
+            Thread.Sleep(1);
+
+            buf = (startq & 0xF) | (maxq << 4 & 0xF0) | (minq << 8 & 0xF00) | (tmult << 12 & 0xF000);
+            RFIDCommands.SendData(m_hid, HexStringToByteArray(String.Format("70010309{0:X2}{1:X2}{2:X2}{3:X2}", (uint)(buf & 0xff), (uint)(buf >> 8 & 0xff), (uint)(buf >> 16 & 0xff), (uint)(buf >> 24 & 0xff))), 8);
+            Thread.Sleep(1);
+
+            RFIDCommands.SendData(m_hid, HexStringToByteArray(String.Format("70010409{0:X2}000000", retry)), 8);
+            Thread.Sleep(1);
+
+            RFIDCommands.SendData(m_hid, HexStringToByteArray(String.Format("70010509{0:X2}000000", toggle)), 8);
+            Thread.Sleep(1);
+
+            buf = cycle_delay;
+            RFIDCommands.SendData(m_hid, HexStringToByteArray(String.Format("70010F0F{0:X2}{1:X2}{2:X2}{3:X2}", (uint)(buf & 0xff), (uint)(buf >> 8 & 0xff), (uint)(buf >> 16 & 0xff), (uint)(buf >> 24 & 0xff))), 8);
+            Thread.Sleep(1);
+        }
+
+        private void btn_settest_Click(object sender, EventArgs e)
+        {
             //Set TX on time
             int tx_on_time = Convert.ToInt32(tb_tx_on.Text);
             RFIDCommands.SendData(m_hid, HexStringToByteArray(String.Format("70010603{0:X2}{1:X2}0000", tx_on_time & 0xFF, (tx_on_time >> 8) & 0xFF)), 8);
@@ -724,6 +780,7 @@ namespace CS108_PC_Client
         {
             m_tagRate = m_totaltag;
             m_totaltag = 0;
+            if (m_startInventory) ++m_elapsed;
             UpdateRate(m_tagRate);
         }
     }

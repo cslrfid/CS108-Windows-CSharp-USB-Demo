@@ -52,6 +52,51 @@ namespace CS108_PC_Client
             return buffer;
         }
 
+        public static byte[] VibratorOn(int mode, int time)
+        {
+            byte[] buffer = new byte[13];
+
+            //header
+            buffer[0] = Constants.PREFIX;
+            buffer[1] = Constants.CONNECTION_USB;
+            buffer[2] = 5; //payload length
+            buffer[3] = Constants.TYPE_BARCODE;
+            buffer[4] = Constants.RESERVE;
+            buffer[5] = Constants.LINK_DOWN;
+            buffer[6] = 0;
+            buffer[7] = 0;
+
+            //payload
+            buffer[8] = 0x90;
+            buffer[9] = 0x04;
+            buffer[10] = (byte)mode;
+            buffer[11] = (byte)(time >> 8);
+            buffer[12] = (byte)time;
+
+            return buffer;
+        }
+
+        public static byte[] VibratorOff()
+        {
+            byte[] buffer = new byte[10];
+
+            //header
+            buffer[0] = Constants.PREFIX;
+            buffer[1] = Constants.CONNECTION_USB;
+            buffer[2] = 2; //payload length
+            buffer[3] = Constants.TYPE_BARCODE;
+            buffer[4] = Constants.RESERVE;
+            buffer[5] = Constants.LINK_DOWN;
+            buffer[6] = 0;
+            buffer[7] = 0;
+
+            //payload
+            buffer[8] = 0x90;
+            buffer[9] = 0x05;
+
+            return buffer;
+        }
+
         public static byte[] SendCommand(byte[] command)
         {
             byte[] buffer = new byte[command.Length + 10];
