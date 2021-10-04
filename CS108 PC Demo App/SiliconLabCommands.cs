@@ -156,5 +156,26 @@ namespace CS108_PC_Client
 
             return buffer;
         }
+
+        public static byte[] Reset()
+        {
+            byte[] buffer = new byte[10];
+
+            //header
+            buffer[0] = Constants.PREFIX;
+            buffer[1] = Constants.CONNECTION_USB;
+            buffer[2] = 2; //payload length
+            buffer[3] = Constants.TYPE_SILAB;
+            buffer[4] = Constants.RESERVE;
+            buffer[5] = Constants.LINK_DOWN;
+            buffer[6] = 0;
+            buffer[7] = 0;
+
+            //payload
+            buffer[8] = 0xB0;
+            buffer[9] = 0x0C;
+
+            return buffer;
+        }
     }
 }

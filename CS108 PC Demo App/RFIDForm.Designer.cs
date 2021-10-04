@@ -30,17 +30,13 @@
         {
             this.components = new System.ComponentModel.Container();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.cb_reconnect = new System.Windows.Forms.CheckBox();
+            this.btn_read = new System.Windows.Forms.Button();
             this.lb_total = new System.Windows.Forms.Label();
             this.label13 = new System.Windows.Forms.Label();
             this.lb_rate = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.label11 = new System.Windows.Forms.Label();
-            this.lv_tag = new CS108_PC_Client.TListView();
-            this.col_index = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.col_pc = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.col_epc = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.col_rssi = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.col_count = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.btn_stop_inventory = new System.Windows.Forms.Button();
             this.btn_inventory = new System.Windows.Forms.Button();
             this.btn_rfid_clear = new System.Windows.Forms.Button();
@@ -49,6 +45,8 @@
             this.tb_info = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.comboBox_region = new System.Windows.Forms.ComboBox();
+            this.label27 = new System.Windows.Forms.Label();
             this.label9 = new System.Windows.Forms.Label();
             this.label8 = new System.Windows.Forms.Label();
             this.tb_profile = new System.Windows.Forms.TextBox();
@@ -95,6 +93,18 @@
             this.label18 = new System.Windows.Forms.Label();
             this.label20 = new System.Windows.Forms.Label();
             this.label21 = new System.Windows.Forms.Label();
+            this.label24 = new System.Windows.Forms.Label();
+            this.tb_status = new System.Windows.Forms.TextBox();
+            this.timer_reset = new System.Windows.Forms.Timer(this.components);
+            this.btn_reset = new System.Windows.Forms.Button();
+            this.cb_brandid = new System.Windows.Forms.CheckBox();
+            this.lv_tag = new CS108_PC_Client.TListView();
+            this.col_index = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.col_pc = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.col_epc = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.col_rssi = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.col_count = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.col_phase = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -103,6 +113,8 @@
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.cb_reconnect);
+            this.groupBox1.Controls.Add(this.btn_read);
             this.groupBox1.Controls.Add(this.lb_total);
             this.groupBox1.Controls.Add(this.label13);
             this.groupBox1.Controls.Add(this.lb_rate);
@@ -116,10 +128,31 @@
             this.groupBox1.Controls.Add(this.btn_rfid_poweron);
             this.groupBox1.Location = new System.Drawing.Point(12, 12);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(757, 326);
+            this.groupBox1.Size = new System.Drawing.Size(757, 355);
             this.groupBox1.TabIndex = 4;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "RFID";
+            // 
+            // cb_reconnect
+            // 
+            this.cb_reconnect.AutoSize = true;
+            this.cb_reconnect.Location = new System.Drawing.Point(543, 328);
+            this.cb_reconnect.Name = "cb_reconnect";
+            this.cb_reconnect.Size = new System.Drawing.Size(208, 16);
+            this.cb_reconnect.TabIndex = 43;
+            this.cb_reconnect.Text = "Auto-reconnect when USB is disrupted.";
+            this.cb_reconnect.UseVisualStyleBackColor = true;
+            this.cb_reconnect.CheckedChanged += new System.EventHandler(this.cb_reconnect_CheckedChanged);
+            // 
+            // btn_read
+            // 
+            this.btn_read.Location = new System.Drawing.Point(230, 322);
+            this.btn_read.Name = "btn_read";
+            this.btn_read.Size = new System.Drawing.Size(105, 27);
+            this.btn_read.TabIndex = 24;
+            this.btn_read.Text = "Read/Write";
+            this.btn_read.UseVisualStyleBackColor = true;
+            this.btn_read.Click += new System.EventHandler(this.btn_read_Click);
             // 
             // lb_total
             // 
@@ -165,47 +198,6 @@
             this.label11.Size = new System.Drawing.Size(32, 12);
             this.label11.TabIndex = 19;
             this.label11.Text = "Rate: ";
-            // 
-            // lv_tag
-            // 
-            this.lv_tag.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.col_index,
-            this.col_pc,
-            this.col_epc,
-            this.col_rssi,
-            this.col_count});
-            this.lv_tag.GridLines = true;
-            this.lv_tag.Location = new System.Drawing.Point(8, 21);
-            this.lv_tag.Name = "lv_tag";
-            this.lv_tag.Size = new System.Drawing.Size(743, 266);
-            this.lv_tag.TabIndex = 17;
-            this.lv_tag.UseCompatibleStateImageBehavior = false;
-            this.lv_tag.View = System.Windows.Forms.View.Details;
-            // 
-            // col_index
-            // 
-            this.col_index.Tag = "";
-            this.col_index.Text = "Index";
-            // 
-            // col_pc
-            // 
-            this.col_pc.Text = "PC";
-            this.col_pc.Width = 50;
-            // 
-            // col_epc
-            // 
-            this.col_epc.Text = "EPC";
-            this.col_epc.Width = 496;
-            // 
-            // col_rssi
-            // 
-            this.col_rssi.Text = "RSSI";
-            this.col_rssi.Width = 59;
-            // 
-            // col_count
-            // 
-            this.col_count.Text = "Count";
-            this.col_count.Width = 73;
             // 
             // btn_stop_inventory
             // 
@@ -259,18 +251,18 @@
             // 
             // tb_info
             // 
-            this.tb_info.Location = new System.Drawing.Point(12, 542);
+            this.tb_info.Location = new System.Drawing.Point(12, 571);
             this.tb_info.Multiline = true;
             this.tb_info.Name = "tb_info";
             this.tb_info.ReadOnly = true;
             this.tb_info.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.tb_info.Size = new System.Drawing.Size(646, 71);
+            this.tb_info.Size = new System.Drawing.Size(342, 71);
             this.tb_info.TabIndex = 5;
             // 
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(12, 527);
+            this.label1.Location = new System.Drawing.Point(12, 556);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(28, 12);
             this.label1.TabIndex = 6;
@@ -278,6 +270,8 @@
             // 
             // groupBox2
             // 
+            this.groupBox2.Controls.Add(this.comboBox_region);
+            this.groupBox2.Controls.Add(this.label27);
             this.groupBox2.Controls.Add(this.label9);
             this.groupBox2.Controls.Add(this.label8);
             this.groupBox2.Controls.Add(this.tb_profile);
@@ -288,12 +282,62 @@
             this.groupBox2.Controls.Add(this.btn_set);
             this.groupBox2.Controls.Add(this.tb_power);
             this.groupBox2.Controls.Add(this.label4);
-            this.groupBox2.Location = new System.Drawing.Point(12, 344);
+            this.groupBox2.Location = new System.Drawing.Point(12, 373);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Size = new System.Drawing.Size(312, 123);
             this.groupBox2.TabIndex = 7;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Settings";
+            // 
+            // comboBox_region
+            // 
+            this.comboBox_region.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBox_region.FormattingEnabled = true;
+            this.comboBox_region.Items.AddRange(new object[] {
+            "0  - Factory Default",
+            "1  - Hong Kong ",
+            "2  - South Africa",
+            "3  - Thailand",
+            "4  - LH1",
+            "5  - LH2",
+            "6  - Venezuela",
+            "7  - Dominican Republic",
+            "8  - Indonesia",
+            "9  - UH2",
+            "10 - Uruguay",
+            "11 - FCC",
+            "12 - UH1",
+            "13 - Argentina",
+            "14 - Malaysia",
+            "15 - Singapore",
+            "16 - Australia",
+            "17 - Brazil 902-904",
+            "18 - Brazil 917-924",
+            "19 - Brazil 915-927",
+            "20 - Brazil 902-906, 915-927",
+            "21 - Brazil 902-906",
+            "22 - Philippine",
+            "23 - Costa Rica",
+            "24 - Peru",
+            "25 - Colombia",
+            "26 - Israel",
+            "27 - Panama",
+            "28 - Chile",
+            "29 - ETSI ",
+            "30 - India "});
+            this.comboBox_region.Location = new System.Drawing.Point(59, 99);
+            this.comboBox_region.Name = "comboBox_region";
+            this.comboBox_region.Size = new System.Drawing.Size(152, 20);
+            this.comboBox_region.TabIndex = 26;
+            // 
+            // label27
+            // 
+            this.label27.AutoSize = true;
+            this.label27.Location = new System.Drawing.Point(6, 102);
+            this.label27.Name = "label27";
+            this.label27.Size = new System.Drawing.Size(42, 12);
+            this.label27.TabIndex = 25;
+            this.label27.Text = "Region:";
             // 
             // label9
             // 
@@ -360,9 +404,9 @@
             // 
             // btn_set
             // 
-            this.btn_set.Location = new System.Drawing.Point(201, 90);
+            this.btn_set.Location = new System.Drawing.Point(230, 90);
             this.btn_set.Name = "btn_set";
-            this.btn_set.Size = new System.Drawing.Size(105, 27);
+            this.btn_set.Size = new System.Drawing.Size(76, 27);
             this.btn_set.TabIndex = 17;
             this.btn_set.Text = "Set";
             this.btn_set.UseVisualStyleBackColor = true;
@@ -461,7 +505,7 @@
             // 
             // btn_clear_info
             // 
-            this.btn_clear_info.Location = new System.Drawing.Point(664, 586);
+            this.btn_clear_info.Location = new System.Drawing.Point(664, 615);
             this.btn_clear_info.Name = "btn_clear_info";
             this.btn_clear_info.Size = new System.Drawing.Size(105, 27);
             this.btn_clear_info.TabIndex = 18;
@@ -489,7 +533,7 @@
             this.groupBox3.Controls.Add(this.label12);
             this.groupBox3.Controls.Add(this.label10);
             this.groupBox3.Controls.Add(this.tb_tx_on);
-            this.groupBox3.Location = new System.Drawing.Point(14, 473);
+            this.groupBox3.Location = new System.Drawing.Point(14, 502);
             this.groupBox3.Name = "groupBox3";
             this.groupBox3.Size = new System.Drawing.Size(757, 51);
             this.groupBox3.TabIndex = 19;
@@ -536,7 +580,7 @@
             // cb_compact
             // 
             this.cb_compact.AutoSize = true;
-            this.cb_compact.Location = new System.Drawing.Point(333, 17);
+            this.cb_compact.Location = new System.Drawing.Point(302, 17);
             this.cb_compact.Name = "cb_compact";
             this.cb_compact.Size = new System.Drawing.Size(96, 16);
             this.cb_compact.TabIndex = 27;
@@ -546,7 +590,7 @@
             // lb_elapsed
             // 
             this.lb_elapsed.AutoSize = true;
-            this.lb_elapsed.Location = new System.Drawing.Point(717, 542);
+            this.lb_elapsed.Location = new System.Drawing.Point(717, 571);
             this.lb_elapsed.Name = "lb_elapsed";
             this.lb_elapsed.Size = new System.Drawing.Size(11, 12);
             this.lb_elapsed.TabIndex = 25;
@@ -555,7 +599,7 @@
             // label16
             // 
             this.label16.AutoSize = true;
-            this.label16.Location = new System.Drawing.Point(664, 542);
+            this.label16.Location = new System.Drawing.Point(664, 571);
             this.label16.Name = "label16";
             this.label16.Size = new System.Drawing.Size(47, 12);
             this.label16.TabIndex = 24;
@@ -563,6 +607,7 @@
             // 
             // groupBox4
             // 
+            this.groupBox4.Controls.Add(this.cb_brandid);
             this.groupBox4.Controls.Add(this.tb_retry);
             this.groupBox4.Controls.Add(this.label23);
             this.groupBox4.Controls.Add(this.tb_threshold);
@@ -581,7 +626,7 @@
             this.groupBox4.Controls.Add(this.label18);
             this.groupBox4.Controls.Add(this.label20);
             this.groupBox4.Controls.Add(this.label21);
-            this.groupBox4.Location = new System.Drawing.Point(330, 344);
+            this.groupBox4.Location = new System.Drawing.Point(330, 373);
             this.groupBox4.Name = "groupBox4";
             this.groupBox4.Size = new System.Drawing.Size(439, 123);
             this.groupBox4.TabIndex = 28;
@@ -754,11 +799,108 @@
             this.label21.TabIndex = 0;
             this.label21.Text = "Session:";
             // 
+            // label24
+            // 
+            this.label24.AutoSize = true;
+            this.label24.Location = new System.Drawing.Point(353, 556);
+            this.label24.Name = "label24";
+            this.label24.Size = new System.Drawing.Size(35, 12);
+            this.label24.TabIndex = 30;
+            this.label24.Text = "Status:";
+            // 
+            // tb_status
+            // 
+            this.tb_status.Location = new System.Drawing.Point(353, 571);
+            this.tb_status.Multiline = true;
+            this.tb_status.Name = "tb_status";
+            this.tb_status.ReadOnly = true;
+            this.tb_status.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.tb_status.Size = new System.Drawing.Size(305, 71);
+            this.tb_status.TabIndex = 29;
+            // 
+            // timer_reset
+            // 
+            this.timer_reset.Enabled = true;
+            this.timer_reset.Interval = 4000;
+            this.timer_reset.Tick += new System.EventHandler(this.timer_reset_Tick);
+            // 
+            // btn_reset
+            // 
+            this.btn_reset.Location = new System.Drawing.Point(666, 586);
+            this.btn_reset.Name = "btn_reset";
+            this.btn_reset.Size = new System.Drawing.Size(105, 27);
+            this.btn_reset.TabIndex = 31;
+            this.btn_reset.Text = "Reset Reader";
+            this.btn_reset.UseVisualStyleBackColor = true;
+            this.btn_reset.Click += new System.EventHandler(this.btn_reset_Click);
+            // 
+            // cb_brandid
+            // 
+            this.cb_brandid.AutoSize = true;
+            this.cb_brandid.Location = new System.Drawing.Point(302, 39);
+            this.cb_brandid.Name = "cb_brandid";
+            this.cb_brandid.Size = new System.Drawing.Size(139, 16);
+            this.cb_brandid.TabIndex = 43;
+            this.cb_brandid.Text = "Brand ID (Ucode8 only)";
+            this.cb_brandid.UseVisualStyleBackColor = true;
+            // 
+            // lv_tag
+            // 
+            this.lv_tag.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.col_index,
+            this.col_pc,
+            this.col_epc,
+            this.col_rssi,
+            this.col_count,
+            this.col_phase});
+            this.lv_tag.FullRowSelect = true;
+            this.lv_tag.GridLines = true;
+            this.lv_tag.HideSelection = false;
+            this.lv_tag.Location = new System.Drawing.Point(8, 21);
+            this.lv_tag.MultiSelect = false;
+            this.lv_tag.Name = "lv_tag";
+            this.lv_tag.Size = new System.Drawing.Size(743, 266);
+            this.lv_tag.TabIndex = 17;
+            this.lv_tag.UseCompatibleStateImageBehavior = false;
+            this.lv_tag.View = System.Windows.Forms.View.Details;
+            // 
+            // col_index
+            // 
+            this.col_index.Tag = "";
+            this.col_index.Text = "Index";
+            // 
+            // col_pc
+            // 
+            this.col_pc.Text = "PC";
+            this.col_pc.Width = 50;
+            // 
+            // col_epc
+            // 
+            this.col_epc.Text = "EPC";
+            this.col_epc.Width = 420;
+            // 
+            // col_rssi
+            // 
+            this.col_rssi.Text = "RSSI";
+            this.col_rssi.Width = 59;
+            // 
+            // col_count
+            // 
+            this.col_count.Text = "Count";
+            this.col_count.Width = 73;
+            // 
+            // col_phase
+            // 
+            this.col_phase.Text = "Phase";
+            // 
             // RFIDForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(781, 625);
+            this.ClientSize = new System.Drawing.Size(781, 650);
+            this.Controls.Add(this.btn_reset);
+            this.Controls.Add(this.label24);
+            this.Controls.Add(this.tb_status);
             this.Controls.Add(this.groupBox4);
             this.Controls.Add(this.lb_elapsed);
             this.Controls.Add(this.groupBox3);
@@ -853,6 +995,16 @@
         private System.Windows.Forms.Label label25;
         private System.Windows.Forms.TextBox tb_cycledelay;
         private System.Windows.Forms.Label label26;
+        private System.Windows.Forms.Button btn_read;
+        private System.Windows.Forms.CheckBox cb_reconnect;
+        private System.Windows.Forms.Label label24;
+        private System.Windows.Forms.TextBox tb_status;
+        private System.Windows.Forms.ComboBox comboBox_region;
+        private System.Windows.Forms.Label label27;
+        private System.Windows.Forms.Timer timer_reset;
+        private System.Windows.Forms.Button btn_reset;
+        private System.Windows.Forms.ColumnHeader col_phase;
+        private System.Windows.Forms.CheckBox cb_brandid;
     }
 }
 

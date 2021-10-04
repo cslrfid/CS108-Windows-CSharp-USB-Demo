@@ -35,6 +35,8 @@ namespace CS108_PC_Client
 
         readonly object locker = new object();
 
+        const string DATETIMEFORMAT = "yyyy-MM-dd HH:mm:ss";
+
         public RFIDForm(IntPtr hid)
         {
             InitializeComponent();
@@ -56,10 +58,12 @@ namespace CS108_PC_Client
             comboBox_session.SelectedIndex = 0;
             comboBox_target.SelectedIndex = 0;
             comboBox_algorithm.SelectedIndex = 1;
+            comboBox_region.SelectedIndex = 0;
         }
 
         private void Main_FormClosing(object sender, FormClosingEventArgs e)
         {
+            m_startInventory = false;
             m_stopRfidDecode = true;
             m_stopReceive = true;
         }
@@ -79,6 +83,7 @@ namespace CS108_PC_Client
                     {
                         if (bytesRead > 0)
                         {
+                            ResetTimer();
                             for (int i = 0; i < bytesRead; i++)
                             {
                                 m_read_buffer[m_read_buffer_head++] = buffer[i];
@@ -96,8 +101,8 @@ namespace CS108_PC_Client
                             }
                             else
                             {
-                                //tb_status.Text = "Wrong prefix is received";
-                                MessageBox.Show("Wrong prefix is received");
+                                UpdateInfo("Wrong prefix is received");
+                                //MessageBox.Show("Wrong prefix is received");
                                 ClearReadBuffer();
                             }
                         }
@@ -105,11 +110,31 @@ namespace CS108_PC_Client
                 }
                 else
                 {
-                    MessageBox.Show("Device is not connected.");
-                    this.Close();
-                    return;
+                    if (cb_reconnect.Checked)
+                    {
+                        UpdateInfo("Device is not connected. Reconnecting...");
+                        Reconnect();
+                    }
+                    else
+                    {
+                        MessageBox.Show("Device is not connected.");
+                        this.Close();
+                        return;
+                    }
                 }
             }
+        }
+
+        private void Reconnect()
+        {
+            UpdateStatus("USB reconnecting at " + DateTime.Now.ToString(DATETIMEFORMAT));
+            while (!HID.IsOpened(MainForm.m_hid))
+            {
+                Thread.Sleep(1);
+            }
+            m_hid = MainForm.m_hid;
+            UpdateStatus("USB reconnected at " + DateTime.Now.ToString(DATETIMEFORMAT));
+            Restart();
         }
 
         private void ClearReadBuffer()
@@ -229,7 +254,13 @@ namespace CS108_PC_Client
                 switch (event_code)
                 {
                     case 0xA000:
-                        // battery percentage
+                        UpdateInfo("Battery level: " + (m_read_buffer[index++] << 8 | m_read_buffer[index++]).ToString());
+                        break;
+                    case 0xA002:
+                        UpdateInfo("Start battery report.");
+                        break;
+                    case 0xA003:
+                        UpdateInfo("Stop battery report.");
                         break;
                     case 0xA100:
                         // battery fail
@@ -333,8 +364,8 @@ namespace CS108_PC_Client
                             UpdateInfo("Unrecognized packet header: " + pkt_ver.ToString("X2"));
                             ClearReadBuffer();
                             ClearRfidBuffer();
-                            if (m_startInventory)
-                                StopInventory();
+                            /*if (m_startInventory)
+                                StopInventory();*/
                             continue;
                         }
                     }
@@ -407,6 +438,7 @@ namespace CS108_PC_Client
                         byte[] PC = new byte[2];
                         byte[] EPC = new byte[128];
                         float rssi;
+                        float phase;
                         int epclen;
                         for (int cnt = 0; cnt < datalen; cnt++)
                         {
@@ -425,23 +457,23 @@ namespace CS108_PC_Client
                                     EPC[i] = data[cnt++];
                                 }
                                 rssi = ConvertNBRSSI(data[cnt++]);
-                                UpdateListView(ByteArrayToHexString(PC, 2), ByteArrayToHexString(EPC, epclen), rssi);
+                                phase = 0;
+                                UpdateListView(ByteArrayToHexString(PC, 2), ByteArrayToHexString(EPC, epclen), rssi, phase);
                                 m_totaltag++;
                             }
                         }
                         else
                         {
-                            epclen = datalen - 16;
-                            for (int cnt = 0; cnt < 2; cnt++)
-                            {
-                                PC[cnt] = data[12 + cnt];
-                            }
+                            PC[0] = data[12];
+                            PC[1] = data[13];
+                            epclen = ((PC[0] >> 3) & 0x1f) * 2;
                             for (int cnt = 0; cnt < epclen; cnt++)
                             {
                                 EPC[cnt] = data[14 + cnt];
                             }
                             rssi = ConvertNBRSSI(data[5]);
-                            UpdateListView(ByteArrayToHexString(PC, 2), ByteArrayToHexString(EPC, epclen), rssi);
+                            phase = ((float)(data[6]&0x3F))*360/128;
+                            UpdateListView(ByteArrayToHexString(PC, 2), ByteArrayToHexString(EPC, epclen), rssi, phase);
                             m_totaltag++;
                         }
                         continue;
@@ -486,11 +518,25 @@ namespace CS108_PC_Client
             {
                 MessageBox.Show("Device failed to transmit data.");
             }
+
+            command = NotifyCommands.SetBatteryReport(true);
+
+            if (!USBSocket.TransmitData(m_hid, command, command.Length))
+            {
+                MessageBox.Show("Device failed to transmit data.");
+            }
         }
 
         private void btn_rfid_poweroff_Click(object sender, EventArgs e)
         {
             byte[] command = RFIDCommands.PowerOn(false);
+
+            if (!USBSocket.TransmitData(m_hid, command, command.Length))
+            {
+                MessageBox.Show("Device failed to transmit data.");
+            }
+
+            command = NotifyCommands.SetBatteryReport(false);
 
             if (!USBSocket.TransmitData(m_hid, command, command.Length))
             {
@@ -516,6 +562,7 @@ namespace CS108_PC_Client
             btn_rfid_poweroff.Enabled = false;
             btn_set.Enabled = false;
             btn_version.Enabled = false;
+            btn_read.Enabled = false;
         }
 
         private void btn_stop_inventory_Click(object sender, EventArgs e)
@@ -525,6 +572,7 @@ namespace CS108_PC_Client
             btn_rfid_poweroff.Enabled = true;
             btn_set.Enabled = true;
             btn_version.Enabled = true;
+            btn_read.Enabled = true;
         }
 
         private void StartInventory()
@@ -546,15 +594,14 @@ namespace CS108_PC_Client
             //RFIDCommands.SendData(m_hid, HexStringToByteArray("7001010901000000"), 8);
             //Thread.Sleep(10);
 
-            /*RFIDCommands.SendData(m_hid, HexStringToByteArray("7001010215020000"), 8);
-            Thread.Sleep(10);*/
-
             //Start inventory
             RFIDCommands.SendData(m_hid, HexStringToByteArray("700100f00f000000"), 8);
 
             m_startInventory = true;
             m_totaltag = 0;
             m_elapsed = 0;
+            timer_reset.Stop();
+            timer_reset.Start();
         }
 
         private void StopInventory()
@@ -563,7 +610,163 @@ namespace CS108_PC_Client
             RFIDCommands.SendData(m_hid, HexStringToByteArray("4003000000000000"), 8);
 
             m_startInventory = false;
+            timer_reset.Stop();
         }
+
+        private void SetRegion(int region)
+        {
+            int i;
+            uint[] FreqTable = null;
+
+            if (region == 0) return;
+
+            //enable channel
+            /*RFIDCommands.SendData(m_hid, HexStringToByteArray(String.Format("7001010C{0:X2}000000", channel - 1)), 8);
+            Thread.Sleep(1);
+            RFIDCommands.SendData(m_hid, HexStringToByteArray("7001020C01000000"), 8);
+            Thread.Sleep(1);*/
+
+            //disable all channels
+            for (i = 0; i <= 49; i++)
+            {
+                RFIDCommands.SendData(m_hid, HexStringToByteArray(String.Format("7001010C{0:X2}000000", i)), 8);
+                Thread.Sleep(1);
+                RFIDCommands.SendData(m_hid, HexStringToByteArray("7001020C00000000"), 8);
+                Thread.Sleep(1);
+            }
+
+            switch (region)
+            {
+                case 0:
+                    break;
+                case 1:
+                    FreqTable = RFIDFreqTable.hkFreqTable;
+                    break;
+                case 2:
+                    FreqTable = RFIDFreqTable.zaFreqTable;
+                    break;
+                case 3:
+                    FreqTable = RFIDFreqTable.thFreqTable;
+                    break;
+                case 4:
+                    FreqTable = RFIDFreqTable.LH1FreqTable;
+                    break;
+                case 5:
+                    FreqTable = RFIDFreqTable.LH2FreqTable;
+                    break;
+                case 6:
+                    FreqTable = RFIDFreqTable.veFreqTable;
+                    break;
+                case 7:
+                    FreqTable = RFIDFreqTable.fccFreqTable;
+                    break;
+                case 8:
+                    FreqTable = RFIDFreqTable.indonesiaFreqTable;
+                    break;
+                case 9:
+                    FreqTable = RFIDFreqTable.UH2FreqTable;
+                    break;
+                case 10:
+                    FreqTable = RFIDFreqTable.fccFreqTable;
+                    break;
+                case 11:
+                    FreqTable = RFIDFreqTable.fccFreqTable;
+                    break;
+                case 12:
+                    FreqTable = RFIDFreqTable.UH1FreqTable;
+                    break;
+                case 13:
+                    FreqTable = RFIDFreqTable.fccFreqTable;
+                    break;
+                case 14:
+                    FreqTable = RFIDFreqTable.mysFreqTable;
+                    break;
+                case 15:
+                    FreqTable = RFIDFreqTable.sgFreqTable;
+                    break;
+                case 16:
+                    FreqTable = RFIDFreqTable.AusFreqTable;
+                    break;
+                case 17:
+                    FreqTable = RFIDFreqTable.br1FreqTable;
+                    break;
+                case 18:
+                    FreqTable = RFIDFreqTable.br2FreqTable;
+                    break;
+                case 19:
+                    FreqTable = RFIDFreqTable.br3FreqTable;
+                    break;
+                case 20:
+                    FreqTable = RFIDFreqTable.br4FreqTable;
+                    break;
+                case 21:
+                    FreqTable = RFIDFreqTable.br5FreqTable;
+                    break;
+                case 22:
+                    FreqTable = RFIDFreqTable.phiFreqTable;
+                    break;
+                case 23:
+                    FreqTable = RFIDFreqTable.fccFreqTable;
+                    break;
+                case 24:
+                    FreqTable = RFIDFreqTable.fccFreqTable;
+                    break;
+                case 25:
+                    FreqTable = RFIDFreqTable.fccFreqTable;
+                    break;
+                case 26:
+                    FreqTable = RFIDFreqTable.isFreqTable;
+                    break;
+                case 27:
+                    FreqTable = RFIDFreqTable.fccFreqTable;
+                    break;
+                case 28:
+                    FreqTable = RFIDFreqTable.fccFreqTable;
+                    break;
+                case 29:
+                    FreqTable = RFIDFreqTable.etsiFreqTable;
+                    break;
+                case 30:
+                    FreqTable = RFIDFreqTable.indiaFreqTable;
+                    break;
+                default:
+                    FreqTable = RFIDFreqTable.fccFreqTable;
+                    break;
+            }
+
+            for (i = 0; i < FreqTable.Length; i++)
+	        {
+                RFIDCommands.SendData(m_hid, HexStringToByteArray(String.Format("7001010C{0:X2}000000", i)), 8);
+                Thread.Sleep(1);
+
+                //Console.WriteLine(String.Format("freqTable {0}, {1:X8}", i, FreqTable[i]));
+                uint t_freqVal = swapMSBLSB32bit(FreqTable[i]);
+                //Console.WriteLine(String.Format("t_freqVal {0:X8}", t_freqVal));
+
+                RFIDCommands.SendData(m_hid, HexStringToByteArray(String.Format("7001030C{0:X8}", t_freqVal)), 8);
+                Thread.Sleep(1);
+
+		        RFIDCommands.SendData(m_hid, HexStringToByteArray("7001020C01000000"), 8);
+                Thread.Sleep(1);
+	        }
+        }
+
+        private uint swapMSBLSB32bit(uint in_32bit)
+        {
+            int[] t_shift = new int[] {0,8,16,24};
+            uint[] t_tmpVal = new uint[4];
+            uint out_32bit;
+            int j;
+	
+            out_32bit = 0;
+            for(j=0; j<4; j++)
+            {
+	            t_tmpVal[j] = (in_32bit>>t_shift[j]) & 0xff;
+	            out_32bit |= t_tmpVal[j]<<t_shift[3-j];
+            }
+
+            return out_32bit;
+        }  
         
         private byte[] HexStringToByteArray(String HexString)
         {
@@ -598,6 +801,9 @@ namespace CS108_PC_Client
             btn_stop_inventory.Enabled = enable;
             btn_set.Enabled = enable;
             btn_version.Enabled = enable;
+            btn_read.Enabled = enable;
+            btn_invset.Enabled = enable;
+            btn_settest.Enabled = enable;
         }
 
         private delegate void UpdateInfoDeleg(String info);
@@ -612,6 +818,18 @@ namespace CS108_PC_Client
             tb_info.AppendText("\r\n");
         }
 
+        private delegate void UpdateStatusDeleg(String status);
+        private void UpdateStatus(String status)
+        {
+            if (this.InvokeRequired)
+            {
+                Invoke(new UpdateStatusDeleg(UpdateStatus), new object[] { status });
+                return;
+            }
+            tb_status.AppendText(status);
+            tb_status.AppendText("\r\n");
+        }
+
         private delegate void UpdateVersionDeleg(String version);
         private void UpdateVersion(String version)
         {
@@ -623,12 +841,12 @@ namespace CS108_PC_Client
             tb_version.Text = version;
         }
 
-        private delegate void UpdateListViewDeleg(String PC, String EPC, float rssi);
-        private void UpdateListView(String PC, String EPC, float rssi)
+        private delegate void UpdateListViewDeleg(String PC, String EPC, float rssi, float phase);
+        private void UpdateListView(String PC, String EPC, float rssi, float phase)
         {
             if (this.InvokeRequired)
             {
-                Invoke(new UpdateListViewDeleg(UpdateListView), new object[] { PC, EPC, rssi });
+                Invoke(new UpdateListViewDeleg(UpdateListView), new object[] { PC, EPC, rssi, phase });
                 return;
             }
 
@@ -649,10 +867,11 @@ namespace CS108_PC_Client
                 listViewItem.SubItems[2].Text = EPC;
                 listViewItem.SubItems[3].Text = rssi.ToString();
                 listViewItem.SubItems[4].Text = (Convert.ToInt32(listViewItem.SubItems[4].Text)+1).ToString();
+                listViewItem.SubItems[5].Text = phase.ToString();
             }
             else
             {
-                string[] row = { lv_tag.Items.Count.ToString(), PC, EPC, rssi.ToString(), "1" };
+                string[] row = { lv_tag.Items.Count.ToString(), PC, EPC, rssi.ToString(), "1", phase.ToString()};
                 ListViewItem listViewItem = new ListViewItem(row);
                 lv_tag.Items.Add(listViewItem);
                 UpdateTotal(count + 1);
@@ -682,12 +901,45 @@ namespace CS108_PC_Client
             lb_total.Text = total.ToString();
         }
 
+        private delegate void ResetTimerDeleg();
+        private void ResetTimer()
+        {
+            if (this.InvokeRequired)
+            {
+                Invoke(new ResetTimerDeleg(ResetTimer), new object[] { });
+                return;
+            }
+            timer_reset.Stop();
+            timer_reset.Start();
+        }
+
+        private delegate void RestartDeleg();
+        private void Restart()
+        {
+            if (this.InvokeRequired)
+            {
+                Invoke(new RestartDeleg(Restart), new object[] { });
+                return;
+            }
+            btn_rfid_poweroff_Click(null, null);
+            Thread.Sleep(10);
+            btn_rfid_poweron_Click(null, null);
+            Thread.Sleep(3000);
+            btn_set_Click(null, null);
+            btn_invset_Click(null, null);
+            Thread.Sleep(10);
+            btn_inventory_Click(null, null);
+        }
+
         private void btn_set_Click(object sender, EventArgs e)
         {
             // Set power
             int power = Convert.ToInt32(tb_power.Text);
             RFIDCommands.SendData(m_hid, HexStringToByteArray(String.Format("70010607{0:X2}{1:X2}0000", power & 0xFF, (power >> 8) & 0xFF)), 8);
             Thread.Sleep(1);
+
+            // Set channel region
+            SetRegion(comboBox_region.SelectedIndex);
 
             // Set channel
             int channel = Convert.ToInt32(tb_channel.Text);
@@ -721,13 +973,14 @@ namespace CS108_PC_Client
         private void btn_invset_Click(object sender, EventArgs e)
         {
             uint buf;
-            uint session, target, toggle, algorithm, startq, minq, maxq, tmult, retry, compact;
+            uint session, target, toggle, algorithm, startq, minq, maxq, tmult, retry, compact, brandid;
 
             session = (uint)comboBox_session.SelectedIndex;
             toggle = (uint)(comboBox_target.SelectedIndex == 0 ? 1 : 0); 
             target = (uint)(comboBox_target.SelectedIndex == 2 ? 1 : 0);
             algorithm = (uint)(comboBox_algorithm.SelectedIndex == 1 ? 3 : 0);
             compact = (uint)(cb_compact.Checked ? 1 : 0);
+            brandid = (uint)(cb_brandid.Checked ? 1 : 0);
             startq = Convert.ToUInt32(tb_startq.Text);
             minq = Convert.ToUInt32(tb_minq.Text);
             maxq = Convert.ToUInt32(tb_maxq.Text);
@@ -735,14 +988,40 @@ namespace CS108_PC_Client
             retry = Convert.ToUInt32(tb_retry.Text);
             
             buf = (target << 4 & 0x10) | (session << 5 & 0x60);
+            if (brandid == 1)
+            {
+                buf |= (3 << 7);
+            }
             RFIDCommands.SendData(m_hid, HexStringToByteArray(String.Format("70010009{0:X2}{1:X2}{2:X2}{3:X2}", (uint)(buf & 0xff), (uint)(buf >> 8 & 0xff), (uint)(buf >> 16 & 0xff), (uint)(buf >> 24 & 0xff))), 8);
             Thread.Sleep(1);
 
             uint delay = Convert.ToUInt32(tb_delay.Text);
             uint cycle_delay = Convert.ToUInt32(tb_cycledelay.Text);
-            buf = (algorithm & 0x1F) | ((delay & 0x3F) << 20) | (compact << 26);
+            buf = (algorithm & 0x1F) | ((delay & 0x3F) << 20) | (compact << 26) | (brandid << 27);
+            if (brandid == 1)
+            {
+                buf |= (1 << 14);
+            }
             RFIDCommands.SendData(m_hid, HexStringToByteArray(String.Format("70010109{0:X2}{1:X2}{2:X2}{3:X2}", (uint)(buf & 0xff), (uint)(buf >> 8 & 0xff), (uint)(buf >> 16 & 0xff), (uint)(buf >> 24 & 0xff))), 8);
             Thread.Sleep(1);
+
+            //Ucode8 brand indentifier
+            if (brandid == 1)
+            {
+                //Ucode8 brand indentifier
+                RFIDCommands.SendData(m_hid, HexStringToByteArray("7001000800000000"), 8);
+                Thread.Sleep(10);
+                RFIDCommands.SendData(m_hid, HexStringToByteArray("7001010809000000"), 8);
+                Thread.Sleep(10);
+                RFIDCommands.SendData(m_hid, HexStringToByteArray("7001020801000000"), 8);
+                Thread.Sleep(10);
+                RFIDCommands.SendData(m_hid, HexStringToByteArray("7001030804020000"), 8);
+                Thread.Sleep(10);
+                RFIDCommands.SendData(m_hid, HexStringToByteArray("7001040801000000"), 8);
+                Thread.Sleep(10);
+                RFIDCommands.SendData(m_hid, HexStringToByteArray("7001050880000000"), 8);
+                Thread.Sleep(10);
+            }
 
             RFIDCommands.SendData(m_hid, HexStringToByteArray(String.Format("70010209{0:X2}000000", algorithm)), 8);
             Thread.Sleep(1);
@@ -782,6 +1061,61 @@ namespace CS108_PC_Client
             m_totaltag = 0;
             if (m_startInventory) ++m_elapsed;
             UpdateRate(m_tagRate);
+        }
+
+        private void btn_read_Click(object sender, EventArgs e)
+        {
+            if (lv_tag.SelectedItems.Count > 0)
+            {
+                m_stopReceive = true;
+                this.Hide();
+                using (RFIDReadForm rfidreadForm = new RFIDReadForm(m_hid, lv_tag.SelectedItems[0].SubItems[2].Text))
+                {
+                    rfidreadForm.ShowDialog();
+                }
+                this.Show();
+                m_stopReceive = false;
+                Thread thread1 = new Thread(new ThreadStart(RecvThread));
+                thread1.Start();
+                btn_invset_Click(null, null);
+            }
+            else
+                MessageBox.Show("Please select an EPC first.");
+        }
+
+        private void cb_reconnect_CheckedChanged(object sender, EventArgs e)
+        {
+            MainForm.AutoReconnect = cb_reconnect.Checked;
+        }
+
+        private void timer_reset_Tick(object sender, EventArgs e)
+        {
+            if (m_startInventory && HID.IsOpened(m_hid))
+            {
+                byte[] command = SiliconLabCommands.Reset();
+
+                if (!USBSocket.TransmitData(m_hid, command, command.Length))
+                {
+                    MessageBox.Show("Device failed to transmit data.");
+                }
+                UpdateStatus("Reset at " + DateTime.Now.ToString(DATETIMEFORMAT));
+                m_startInventory = false;
+            }
+        }
+
+        private void btn_reset_Click(object sender, EventArgs e)
+        {
+            if (HID.IsOpened(m_hid))
+            {
+                byte[] command = SiliconLabCommands.Reset();
+
+                if (!USBSocket.TransmitData(m_hid, command, command.Length))
+                {
+                    MessageBox.Show("Device failed to transmit data.");
+                }
+                UpdateStatus("Reset at " + DateTime.Now.ToString(DATETIMEFORMAT));
+                m_startInventory = false;
+            }
         }
     }
 }

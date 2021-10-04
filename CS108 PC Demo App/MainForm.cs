@@ -15,9 +15,19 @@ namespace CS108_PC_Client
 {
     public partial class MainForm : Form
     {
-        IntPtr m_hid;
+        public static IntPtr m_hid;
         bool m_Connected = false;
+        static bool m_AutoReconnect = false;
         private UpdateProgressForm progressform = null;
+
+        public static bool AutoReconnect
+        {
+            get { return m_AutoReconnect; }
+            set
+            {
+                m_AutoReconnect = value;
+            }
+        }
 
         public MainForm()
         {
@@ -30,6 +40,36 @@ namespace CS108_PC_Client
             UpdateDeviceList();
 
             progressform = new UpdateProgressForm();
+
+            byte[] buffer = new byte[256];
+            uint crc = 0;
+
+            for (ushort i = 0; i < 8; i++)
+            {
+                buffer[i] = 0xFF;
+            }
+
+            //buffer = StringToByteArray("A7B346C2D39E8100041205803C0000003000E28011606000020D77249C95523000E28011606000020D76E128BC3B3000E28011606000020D77252814583000E28011606000020D7724D0B544");
+            //buffer = StringToByteArray("A7B346C2D49E8100041205803C0000003000E28011606000020D7723BCA5393000E280116060A7B346C2D79E5DB33000E28011606000020D77242CE1423000E28011606000020D772528544C");
+            //CA43
+            //buffer = StringToByteArray("A7B346C2D89E8100041205803C0000003000E28011606000020D7722EC62393000E28011606000020D76E0EA2B383000E28011606000020D772502D13E3000E28011606000020D76E35A9C37");
+            //A6F2
+            /*buffer = StringToByteArray("A7B346C2D99E8100041205803C0000003000E28011606000020D77249A91533000E28011606000020D77242A64453000E28011606000020D77242AD53B3000E28011606000020D772528444C");
+
+            for (ushort i = 0; i < 76; i++)
+            {
+                crc = CRC.UpdateCRC(crc, buffer[i]);
+            }
+
+            Console.WriteLine(crc);*/
+        }
+
+        public static byte[] StringToByteArray(string hex)
+        {
+            return Enumerable.Range(0, hex.Length)
+                             .Where(x => x % 2 == 0)
+                             .Select(x => Convert.ToByte(hex.Substring(x, 2), 16))
+                             .ToArray();
         }
 
         protected override void WndProc(ref Message m)
@@ -90,6 +130,9 @@ namespace CS108_PC_Client
                         }
 
                         UpdateDeviceList();
+
+                        if (m_AutoReconnect)
+                            if (Connect()) m_Connected = true;
                     }
                 }
             }
@@ -305,7 +348,10 @@ namespace CS108_PC_Client
 
         private void GetSilabVersion()
         {
-            byte[] command = SiliconLabCommands.GetVersion();
+            byte[] buffer = new byte[128];
+            int bytesRead = 0;
+
+            byte[] command = RFIDCommands.PowerOn(false);
 
             if (!USBSocket.TransmitData(m_hid, command, command.Length))
             {
@@ -313,8 +359,24 @@ namespace CS108_PC_Client
                 return;
             }
 
-            byte[] buffer = new byte[128];
-            int bytesRead = 0;
+            if (HID.IsOpened(m_hid))
+            {
+                if (USBSocket.ReceiveData(m_hid, ref buffer, buffer.Length, ref bytesRead, 1000))
+                {
+                }
+            }
+            else
+            {
+                MessageBox.Show("Device is not connected.");
+            }
+
+            command = SiliconLabCommands.GetVersion();
+
+            if (!USBSocket.TransmitData(m_hid, command, command.Length))
+            {
+                MessageBox.Show("Device failed to transmit data.");
+                return;
+            }
 
             // Make sure that we are connected to a device
             if (HID.IsOpened(m_hid))
